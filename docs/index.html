@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Which Content Pages Should Be Reviewed First? | FlyRank ML Capstone</title>
+
+    <meta name="description"
+        content="A machine-learning decision-support system for ranking content pages for human review based on observed decline risk.">
+
+    <style>
+
+        /* =========================
+           GLOBAL
+        ========================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f6f8fb;
+            color: #1f2937;
+            line-height: 1.7;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* =========================
+           NAVIGATION
+        ========================== */
+
+        nav {
+            background: #111827;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1100px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-title {
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #d1d5db;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            color: white;
+            text-decoration: none;
+        }
+
+        /* =========================
+           HERO
+        ========================== */
+
+        .hero {
+            background: linear-gradient(135deg, #111827, #1e3a5f);
+            color: white;
+            padding: 80px 20px 70px;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            max-width: 850px;
+            margin: 0 0 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 750px;
+            color: #dbeafe;
+        }
+
+        /* =========================
+           LAYOUT
+        ========================== */
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 60px 20px;
+        }
+
+        section {
+            margin-bottom: 70px;
+            scroll-margin-top: 80px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+
+        h3 {
+            color: #1f2937;
+            margin-top: 30px;
+        }
+
+        .section-intro {
+            font-size: 1.1rem;
+            color: #4b5563;
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           CARDS
+        ========================== */
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .highlight {
+            border-left: 5px solid #2563eb;
+        }
+
+        .warning {
+            border-left: 5px solid #d97706;
+            background: #fffbeb;
+        }
+
+        .success {
+            border-left: 5px solid #16a34a;
+        }
+
+        /* =========================
+           SUMMARY GRID
+        ========================== */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+            margin: 30px 0;
+        }
+
+        .stat {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* =========================
+           LISTS
+        ========================== */
+
+        ul,
+        ol {
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* =========================
+           TABLES
+        ========================== */
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        /* =========================
+           FIGURES
+        ========================== */
+
+        figure {
+            margin: 35px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        figure img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        figcaption {
+            margin-top: 18px;
+            color: #4b5563;
+        }
+
+        .takeaway {
+            margin-top: 12px;
+            padding: 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            color: #1e3a5f;
+        }
+
+        /* =========================
+           ABSTRACT
+        ========================== */
+
+        .abstract {
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            border-top: 5px solid #2563eb;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* =========================
+           FOOTER
+        ========================== */
+
+        footer {
+            background: #111827;
+            color: #d1d5db;
+            padding: 45px 20px;
+            margin-top: 50px;
+        }
+
+        .footer-content {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        footer a {
+            color: #93c5fd;
+        }
+
+        /* =========================
+           MOBILE
+        ========================== */
+
+        @media (max-width: 700px) {
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding-top: 40px;
+            }
+
+            h2 {
+                font-size: 1.7rem;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <!-- =========================
+         NAVIGATION
+    ========================== -->
+
+    <nav>
+
+        <div class="nav-container">
+
+            <div class="nav-title">
+                FlyRank ML Capstone
+            </div>
+
+            <div class="nav-links">
+                <a href="#abstract">Abstract</a>
+                <a href="#problem">Problem</a>
+                <a href="#data">Data</a>
+                <a href="#methodology">Methodology</a>
+                <a href="#results">Results</a>
+                <a href="#recommendations">Recommendations</a>
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         HERO
+    ========================== -->
+
+    <header class="hero">
+
+        <div class="hero-content">
+
+            <div class="tag">
+                FlyRank ML Internship · Machine Learning Capstone
+            </div>
+
+            <h1>
+                Which Content Pages Should a Human Reviewer Investigate First?
+            </h1>
+
+            <p>
+                A machine-learning decision-support approach for ranking content
+                pages based on their observed risk of declining search visibility.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+
+        <!-- =========================
+             ABSTRACT
+        ========================== -->
+
+        <section id="abstract">
+
+            <h2>Abstract</h2>
+
+            <div class="abstract">
+
+                <p>
+                    This study asks whether early-period search and engagement
+                    signals can be used to rank content pages for human review
+                    based on their observed risk of declining search visibility
+                    in a later period.
+                </p>
+
+                <p>
+                    Using the FlyRank ML Internship Warehouse dataset, March 2026
+                    observations were divided into an early feature window and a
+                    later outcome window, producing a modeling dataset of 319,759
+                    content items across 52 pseudonymized clients.
+                </p>
+
+                <p>
+                    A simple impressions-based ranking baseline, Logistic Regression,
+                    Random Forest, and balanced Random Forest were evaluated using
+                    a grouped train-test split that held out entire clients.
+                </p>
+
+                <p>
+                    The balanced Random Forest produced the strongest overall
+                    ranking performance, reaching Precision@1,000 of 48.0% compared
+                    with 27.3% for the impressions baseline on the same held-out
+                    client set.
+                </p>
+
+                <p>
+                    The resulting system is intended as directional decision-support
+                    for prioritizing human investigation and does not establish
+                    causal relationships or guarantee that refreshing or modifying
+                    content will improve future performance.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             INTRODUCTION
+        ========================== -->
+
+        <section id="problem">
+
+            <h2>1. Introduction / Problem Statement</h2>
+
+            <p class="section-intro">
+                The practical problem is not simply detecting changing content
+                performance—it is deciding where limited human review time should
+                be spent first.
+            </p>
+
+            <div class="card highlight">
+
+                <h3>Research Question</h3>
+
+                <p>
+                    Can early-period content performance signals be used to rank
+                    content pages for human review based on their observed risk of
+                    declining in a later period?
+                </p>
+
+                <p>
+                    This project studies whether search and engagement signals
+                    observed during an early time window can help identify pages
+                    that later show lower average daily search impressions.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>The Decision Supported</h3>
+
+                <p>
+                    Content teams may have more pages to review than they have
+                    editorial capacity to investigate. Reviewing every page equally
+                    can therefore be inefficient.
+                </p>
+
+                <blockquote>
+                    <strong>
+                        Which content pages should a human reviewer investigate
+                        first for possible signs of declining search visibility?
+                    </strong>
+                </blockquote>
+
+                <p>
+                    The output is a ranked review queue. Pages near the top are not
+                    automatically refreshed, rewritten, deleted, or modified.
+                    Their ranking indicates that, based on observed early-period
+                    signals and the validated model, they may be worth reviewing
+                    earlier than lower-ranked pages.
+                </p>
+
+                <p>
+                    The intended use is therefore <strong>prioritization for human
+                    investigation</strong>, not autonomous content management.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             DATA
+        ========================== -->
+
+        <section id="data">
+
+            <h2>2. Data</h2>
+
+            <p class="section-intro">
+                The analysis uses pseudonymized production search and
+                content-performance data in a public-safe format.
+            </p>
+
+
+            <div class="grid">
+
+                <div class="stat">
+                    <div class="stat-number">v20260703</div>
+                    <div class="stat-label">Warehouse Release</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">9.84M</div>
+                    <div class="stat-label">March Daily Observations</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">319,759</div>
+                    <div class="stat-label">Content Items Modeled</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">52</div>
+                    <div class="stat-label">Pseudonymized Clients</div>
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Data Source</h3>
+
+                <p>
+                    This project uses the <strong>FlyRank ML Internship Warehouse
+                    dataset</strong>, release <strong>v20260703</strong>.
+                    The warehouse contains pseudonymized production search and
+                    content-performance data.
+                </p>
+
+                <p>
+                    The analysis uses the
+                    <code>fact_content_daily_performance</code> table, where each
+                    record represents a daily observation for a pseudonymized
+                    content item within a pseudonymized client portfolio.
+                </p>
+
+                <p>
+                    No client names, domains, URLs, private search queries, or
+                    credentials are included in this public analysis.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Time Window</h3>
+
+                <p>
+                    The capstone focuses on <strong>March 2026</strong>.
+                    The month was divided into two non-overlapping periods:
+                </p>
+
+                <ul>
+                    <li>
+                        <strong>Early observation period:</strong>
+                        March 1–15, 2026
+                    </li>
+
+                    <li>
+                        <strong>Later outcome period:</strong>
+                        March 16–31, 2026
+                    </li>
+                </ul>
+
+                <p>
+                    The early period was used to construct input features. The
+                    later period was used only to define the observed decline
+                    outcome.
+                </p>
+
+                <p>
+                    This separation preserves the intended temporal direction of
+                    the analysis: later-period information was not used as a model
+                    feature.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>March 2026 Extract</h3>
+
+                <p>
+                    The March dataset contained <strong>9,841,378 daily
+                    observations</strong>.
+                </p>
+
+                <ul>
+                    <li>
+                        Early period: <strong>4,642,255 rows</strong>
+                    </li>
+
+                    <li>
+                        Later period: <strong>5,199,123 rows</strong>
+                    </li>
+                </ul>
+
+                <p>
+                    Daily observations were aggregated to the content-item level
+                    using pseudonymized client and content identifiers as grouping
+                    keys.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Features Available for Modeling</h3>
+
+                <p>
+                    The final analysis used early-period search and engagement
+                    signals including:
+                </p>
+
+                <ul>
+                    <li>Impressions</li>
+                    <li>Clicks</li>
+                    <li>Average search position</li>
+                    <li>Pageviews</li>
+                    <li>Sessions</li>
+                    <li>Users</li>
+                    <li>Engaged sessions</li>
+                    <li>Engagement time</li>
+                    <li>Organic sessions</li>
+                    <li>Scroll events</li>
+                </ul>
+
+            </div>
+
+
+            <div class="card warning">
+
+                <h3>Data Availability Considerations</h3>
+
+                <p>
+                    Search and analytics availability was not uniform across all
+                    clients and reporting rows.
+                </p>
+
+                <p>
+                    Of the 52 clients present in the early-period data, 44 had at
+                    least some GSC data available, while 8 had no GSC availability
+                    during the early period. No client had GSC data available for
+                    every early-period row.
+                </p>
+
+                <p>
+                    Availability flags were checked during data preparation because
+                    unavailable measurements should not automatically be interpreted
+                    as genuine zero performance.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             METHODOLOGY
+        ========================== -->
+
+        <section id="methodology">
+
+            <h2>3. Methodology</h2>
+
+            <p class="section-intro">
+                The problem was framed as a prediction and ranking task: use
+                measurements from an earlier observation period to prioritize
+                content items for human review based on modeled decline risk.
+            </p>
+
+
+            <div class="card">
+
+                <h3>Time-Window Design</h3>
+
+                <p>
+                    The March 2026 data was divided into two non-overlapping
+                    periods.
+                </p>
+
+                <ul>
+                    <li>
+                        <strong>Early period:</strong> March 1–15, 2026
+                    </li>
+
+                    <li>
+                        <strong>Later period:</strong> March 16–31, 2026
+                    </li>
+                </ul>
+
+                <p>
+                    Early-period measurements were used to construct model
+                    features. Later-period measurements were reserved for
+                    constructing the outcome used to evaluate decline.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Model Features</h3>
+
+                <p>
+                    The final model used ten measurements derived from the early
+                    observation period:
+                </p>
+
+                <ul>
+                    <li>Impressions</li>
+                    <li>Clicks</li>
+                    <li>Average search position</li>
+                    <li>Pageviews</li>
+                    <li>Sessions</li>
+                    <li>Users</li>
+                    <li>Engaged sessions</li>
+                    <li>Engagement time</li>
+                    <li>Organic sessions</li>
+                    <li>Scroll events</li>
+                </ul>
+
+                <p>
+                    These variables describe observed search visibility and user
+                    activity during the early period. They are model inputs and
+                    should not be interpreted as evidence that any individual
+                    signal causes later decline.
+                </p>
+
+            </div>
+
+
+            <div class="card highlight">
+
+                <h3>Target Definition: Observed Decline</h3>
+
+                <p>
+                    The target variable, <code>is_declining</code>, was constructed
+                    by comparing average daily search impressions across the two
+                    non-overlapping periods.
+                </p>
+
+                <p>
+                    The early period contained 15 days and the later period
+                    contained 16 days. Total impressions were therefore converted
+                    to average daily impressions before comparison.
+                </p>
+
+                <p>
+                    A content item was labeled as declining
+                    (<code>is_declining = 1</code>) when:
+                </p>
+
+                <ol>
+                    <li>
+                        It had more than zero impressions during the early period.
+                    </li>
+
+                    <li>
+                        Its average daily impressions during the later period were
+                        lower than its average daily impressions during the early
+                        period.
+                    </li>
+                </ol>
+
+                <p>
+                    Content items that did not meet these conditions were labeled
+                    as non-declining (<code>is_declining = 0</code>).
+                </p>
+
+                <p>
+                    This label represents an observed decrease in average daily
+                    search impressions between the selected periods. It does not
+                    establish why the decrease occurred.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Baseline</h3>
+
+                <p>
+                    The machine-learning models were compared with a simple,
+                    transparent ranking baseline based on early-period impressions.
+                </p>
+
+                <p>
+                    For the baseline, content items in the held-out test set were
+                    ranked from highest to lowest by early-period impression volume.
+                </p>
+
+                <p>
+                    This tests whether the models concentrate observed declining
+                    items nearer the top of the review queue more effectively than
+                    prioritizing highly visible content alone.
+                </p>
+
+                <p>
+                    The held-out test-set decline rate was approximately
+                    <strong>18.4%</strong>, providing context for interpreting
+                    ranking performance.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Validation Design</h3>
+
+                <p>
+                    The primary validation design used a grouped train-test split
+                    based on <code>client_hash_id</code>.
+                </p>
+
+                <p>
+                    A <code>GroupShuffleSplit</code> used a test proportion of
+                    20% and a fixed random state of 42.
+                </p>
+
+                <ul>
+                    <li>
+                        Training set: <strong>265,352 content items from 41 clients</strong>
+                    </li>
+
+                    <li>
+                        Held-out test set: <strong>54,407 content items from 11 clients</strong>
+                    </li>
+                </ul>
+
+                <p>
+                    No client appeared in both the training and test sets.
+                </p>
+
+                <p>
+                    This design reduces the risk of evaluating the model on content
+                    from clients already seen during training. Performance was
+                    therefore evaluated on <strong>held-out clients</strong>.
+                </p>
+
+                <p>
+                    Because the intended output is a ranked review queue,
+                    performance was evaluated using <strong>Precision@K</strong>
+                    at K = 100, 500, 1,000, and 5,000.
+                </p>
+
+            </div>
+
+
+            <div class="card warning">
+
+                <h3>Leakage Checks</h3>
+
+                <p>
+                    A leakage audit was performed on the final feature set to check
+                    whether future-period outcomes or target-related columns were
+                    accidentally included as model inputs.
+                </p>
+
+                <p>
+                    The following columns were explicitly excluded from the final
+                    model features:
+                </p>
+
+                <ul>
+                    <li><code>late_impressions</code></li>
+                    <li><code>late_daily_impressions</code></li>
+                    <li><code>is_declining</code></li>
+                </ul>
+
+                <p>
+                    No direct future-period information leakage was identified in
+                    the final feature set.
+                </p>
+
+                <p>
+                    Two limitations remain important. Early-period impressions are
+                    both a model feature and part of the comparison used to construct
+                    the decline label, although this is not future-period leakage.
+                    In addition, some GA4-derived features may include zero-filled
+                    periods caused by unavailable GA4 data rather than genuine zero
+                    engagement.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             RESULTS
+        ========================== -->
+
+        <section id="results">
+
+            <h2>4. Results</h2>
+
+            <p class="section-intro">
+                All methods were evaluated on the same held-out client set using
+                Precision@K.
+            </p>
+
+
+            <div class="card highlight">
+
+                <h3>Main Result</h3>
+
+                <p>
+                    The held-out test set had an overall observed decline rate of
+                    approximately <strong>18.4%</strong>.
+                </p>
+
+                <p>
+                    The balanced Random Forest produced the strongest overall
+                    ranking performance across the evaluated queue sizes.
+                </p>
+
+                <ul>
+                    <li><strong>Precision@100: 40.0%</strong></li>
+                    <li><strong>Precision@1,000: 48.0%</strong></li>
+                    <li><strong>Precision@5,000: 44.3%</strong></li>
+                </ul>
+
+                <p>
+                    At <strong>K = 1,000</strong>, the balanced Random Forest
+                    concentrated observed declining items in 48.0% of the
+                    top-ranked pages, compared with 27.3% for the impressions
+                    baseline and 31.4% for Logistic Regression.
+                </p>
+
+            </div>
+
+
+            <h3>Model Comparison</h3>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Queue Size (K)</th>
+                            <th>Baseline</th>
+                            <th>Logistic Regression</th>
+                            <th>Random Forest Balanced</th>
+                            <th>Random Forest</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>100</td>
+                            <td>32.0%</td>
+                            <td>36.0%</td>
+                            <td><strong>40.0%</strong></td>
+                            <td>36.0%</td>
+                        </tr>
+
+                        <tr>
+                            <td>500</td>
+                            <td>27.4%</td>
+                            <td>31.6%</td>
+                            <td>40.2%</td>
+                            <td><strong>41.6%</strong></td>
+                        </tr>
+
+                        <tr>
+                            <td>1,000</td>
+                            <td>27.3%</td>
+                            <td>31.4%</td>
+                            <td><strong>48.0%</strong></td>
+                            <td>43.8%</td>
+                        </tr>
+
+                        <tr>
+                            <td>5,000</td>
+                            <td>31.6%</td>
+                            <td>33.7%</td>
+                            <td><strong>44.3%</strong></td>
+                            <td>43.5%</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <figure>
+
+                <img
+                    src="img/model_vs_baseline.png"
+                    alt="Line chart comparing Precision at K for the impressions baseline, Logistic Regression, Random Forest Balanced, and Random Forest."
+                >
+
+                <figcaption>
+
+                    <strong>Figure 1. Held-out client ranking performance.</strong>
+
+                    <div class="takeaway">
+                        Across the evaluated queue sizes, the machine-learning
+                        models generally achieved higher Precision@K than the
+                        impressions baseline. The balanced Random Forest showed the
+                        strongest overall results, particularly at K = 1,000.
+                    </div>
+
+                </figcaption>
+
+            </figure>
+
+
+            <h3>Feature Importance</h3>
+
+            <p>
+                Feature importance values were examined to interpret which
+                early-period signals the fitted Random Forest relied on most heavily.
+            </p>
+
+            <p>
+                Early-period impressions received the largest importance value
+                (<strong>0.580</strong>), followed by average search position
+                (<strong>0.300</strong>). The remaining features had substantially
+                smaller importance values.
+            </p>
+
+
+            <figure>
+
+                <img
+                    src="img/feature_importance.png"
+                    alt="Horizontal bar chart showing feature importance in the Random Forest model."
+                >
+
+                <figcaption>
+
+                    <strong>Figure 2. Feature importance in the Random Forest model.</strong>
+
+                    <div class="takeaway">
+                        In the fitted Random Forest, early-period impressions and
+                        average search position accounted for most of the measured
+                        feature importance. These values describe how the model used
+                        the features and should not be interpreted as causal effects.
+                    </div>
+
+                </figcaption>
+
+            </figure>
+
+        </section>
+
+
+        <!-- =========================
+             LIMITATIONS
+        ========================== -->
+
+        <section id="limitations">
+
+            <h2>5. Limitations & Honest Framing</h2>
+
+            <p class="section-intro">
+                This work is designed as a directional decision-support analysis,
+                and its results should be interpreted within the dataset and
+                validation design used here.
+            </p>
+
+
+            <div class="card warning">
+
+                <h3>No Causal Claims</h3>
+
+                <p>
+                    The analysis identifies patterns associated with observed
+                    content decline and evaluates how well models rank declining
+                    items on held-out clients.
+                </p>
+
+                <p>
+                    It does not establish that any individual feature causes content
+                    decline.
+                </p>
+
+                <p>
+                    The results also do not show that refreshing, rewriting, or
+                    modifying a recommended page will improve future performance.
+                    Demonstrating causal refresh impact would require an intervention
+                    or experimental design.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Limited Outcome Definition</h3>
+
+                <p>
+                    The decline label is based on a comparison between early-period
+                    and later-period impressions.
+                </p>
+
+                <p>
+                    This provides one practical operational definition of decline
+                    for ranking content for review, but it is not a universal
+                    definition of content performance.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Dataset and Time-Period Limits</h3>
+
+                <p>
+                    The findings are based on the FlyRank internship dataset and
+                    the selected March 2026 observation and outcome periods.
+                </p>
+
+                <p>
+                    Patterns observed in this dataset may not generalize to every
+                    website, client, content portfolio, or future time period.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Feature and Data Availability Limits</h3>
+
+                <p>
+                    The model uses a limited set of early-period search and
+                    engagement signals. Other potentially relevant factors were not
+                    included in the final feature set.
+                </p>
+
+                <p>
+                    Some GA4-derived metrics may also be affected by data
+                    availability, meaning some zero-filled periods may not always
+                    represent genuine zero activity.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Model Interpretation Limits</h3>
+
+                <p>
+                    Feature importance values show which variables the fitted Random
+                    Forest relied on most heavily when constructing its ranking.
+                    They do not measure causal effects.
+                </p>
+
+                <p>
+                    For example, the high importance of early-period impressions
+                    does not mean that changing impressions would cause future
+                    decline.
+                </p>
+
+            </div>
+
+
+            <div class="card success">
+
+                <h3>Ranking, Not Automatic Action</h3>
+
+                <p>
+                    The model produces a ranked review queue, not an automatic
+                    content-management system.
+                </p>
+
+                <p>
+                    A high decline-risk score should be treated as a signal that an
+                    item may be worth human review. A reviewer should still examine
+                    content context, data quality, business relevance, and possible
+                    explanations before taking action.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             RECOMMENDATIONS
+        ========================== -->
+
+        <section id="recommendations">
+
+            <h2>6. Ranked Recommendations</h2>
+
+            <p class="section-intro">
+                The final output is an action-oriented review queue designed to help
+                humans decide where to investigate first.
+            </p>
+
+
+            <div class="card highlight">
+
+                <h3>Recommended Review Workflow</h3>
+
+                <ol>
+
+                    <li>
+                        Start with the highest-ranked content items.
+                    </li>
+
+                    <li>
+                        Read the reason codes and supporting signals.
+                    </li>
+
+                    <li>
+                        Check data quality and content context.
+                    </li>
+
+                    <li>
+                        Decide whether the item needs investigation, monitoring,
+                        refreshing, rewriting, consolidation, or no action.
+                    </li>
+
+                    <li>
+                        Record the human decision so future analysis can distinguish
+                        model recommendations from actual actions.
+                    </li>
+
+                </ol>
+
+            </div>
+
+
+            <h3>Recommended Actions After Human Review</h3>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Review Outcome</th>
+                            <th>Suggested Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>Content remains relevant but appears to be losing visibility</td>
+                            <td>Review and consider refreshing the content</td>
+                        </tr>
+
+                        <tr>
+                            <td>Topic remains valuable but no longer matches current search intent</td>
+                            <td>Review for substantial improvement or rewriting</td>
+                        </tr>
+
+                        <tr>
+                            <td>Page has overlapping or redundant content</td>
+                            <td>Consider consolidation or merging after review</td>
+                        </tr>
+
+                        <tr>
+                            <td>Content remains strategically valuable and performs adequately</td>
+                            <td>Protect and monitor</td>
+                        </tr>
+
+                        <tr>
+                            <td>Recommendation appears driven by unusual or questionable data</td>
+                            <td>Investigate data quality before taking action</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <h3>Example Ranked Review Queue</h3>
+
+            <p>
+                The following public-safe example shows the highest-priority items
+                produced by the ranking workflow. No client names, URLs, or content
+                identifiers are included.
+            </p>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Decline Risk</th>
+                            <th>Early Impressions</th>
+                            <th>Average Position</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>1</td>
+                            <td>96.8%</td>
+                            <td>16,091</td>
+                            <td>39.99</td>
+                        </tr>
+
+                        <tr>
+                            <td>2</td>
+                            <td>96.8%</td>
+                            <td>17,902</td>
+                            <td>33.88</td>
+                        </tr>
+
+                        <tr>
+                            <td>3</td>
+                            <td>96.5%</td>
+                            <td>1,684</td>
+                            <td>33.03</td>
+                        </tr>
+
+                        <tr>
+                            <td>4</td>
+                            <td>96.4%</td>
+                            <td>24,759</td>
+                            <td>38.65</td>
+                        </tr>
+
+                        <tr>
+                            <td>5</td>
+                            <td>96.3%</td>
+                            <td>1,246</td>
+                            <td>30.48</td>
+                        </tr>
+
+                        <tr>
+                            <td>6</td>
+                            <td>96.2%</td>
+                            <td>4,975</td>
+                            <td>49.79</td>
+                        </tr>
+
+                        <tr>
+                            <td>7</td>
+                            <td>96.1%</td>
+                            <td>18,139</td>
+                            <td>36.06</td>
+                        </tr>
+
+                        <tr>
+                            <td>8</td>
+                            <td>96.0%</td>
+                            <td>2,708</td>
+                            <td>37.57</td>
+                        </tr>
+
+                        <tr>
+                            <td>9</td>
+                            <td>95.8%</td>
+                            <td>20,267</td>
+                            <td>32.65</td>
+                        </tr>
+
+                        <tr>
+                            <td>10</td>
+                            <td>95.6%</td>
+                            <td>893</td>
+                            <td>45.96</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Reason Codes</h3>
+
+                <p>
+                    Each ranked recommendation is accompanied by simple,
+                    human-readable reason codes.
+                </p>
+
+                <p>
+                    Example:
+                </p>
+
+                <blockquote>
+                    <strong>
+                        Ranked #1 by the model's decline-risk score | High
+                        early-period impression volume | Weaker average search
+                        position relative to this dataset
+                    </strong>
+                </blockquote>
+
+                <p>
+                    Reason codes are intended to make the ranking easier for a
+                    human reviewer to interpret. They describe signals associated
+                    with an item's position in the review queue and do not prove
+                    why that content declined.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>The Practical Insight</h3>
+
+                <p>
+                    Content performance can change over time, so content review
+                    should not rely only on a page's historical importance.
+                </p>
+
+                <p>
+                    Pages with substantial early-period visibility may still deserve
+                    attention when the model identifies a pattern associated with
+                    observed decline. This creates a practical review opportunity
+                    because high-visibility content may represent greater potential
+                    value for investigation.
+                </p>
+
+                <p>
+                    However, the results do not show that refreshing content will
+                    reverse decline. A refresh recommendation should therefore be
+                    treated as a hypothesis for human review rather than an expected
+                    outcome.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             REPRODUCIBILITY
+        ========================== -->
+
+        <section id="reproducibility">
+
+            <h2>7. Reproducibility</h2>
+
+            <p class="section-intro">
+                The project repository contains the notebooks and supporting work
+                used to build this analysis.
+            </p>
+
+
+            <div class="card">
+
+                <h3>Project Repository</h3>
+
+                <p>
+                    The full project repository contains the capstone notebook,
+                    weekly assignment work, supporting materials, and deployment
+                    files.
+                </p>
+
+                <p>
+                    <a
+                        href="https://github.com/MohdFuzailHaider/flyrank"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View the FlyRank Capstone Repository →
+                    </a>
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>How the Analysis Can Be Reviewed</h3>
+
+                <ul>
+                    <li>
+                        Inspect the capstone notebook under
+                        <code>work/notebooks/</code>.
+                    </li>
+
+                    <li>
+                        Review the feature construction and target definition.
+                    </li>
+
+                    <li>
+                        Review the grouped validation design and leakage checks.
+                    </li>
+
+                    <li>
+                        Compare the models against the impressions baseline on the
+                        same held-out client set.
+                    </li>
+
+                    <li>
+                        Inspect the public-safe charts and ranked recommendation
+                        outputs.
+                    </li>
+                </ul>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             ACKNOWLEDGMENTS
+        ========================== -->
+
+        <section id="acknowledgments">
+
+            <h2>8. Acknowledgments & Data Credit</h2>
+
+            <div class="card success">
+
+                <p>
+                    This project was built as part of the FlyRank ML Internship.
+                </p>
+
+                <p>
+                    <strong>
+                        Built on the
+                        <a
+                            href="https://flyrank.ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            FlyRank ML Internship dataset
+                        </a>.
+                    </strong>
+                </p>
+
+                <p>
+                    The public version of this research paper intentionally excludes
+                    client names, domains, URLs, private search queries, credentials,
+                    and raw data exports.
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        <div class="footer-content">
+
+            <h3>FlyRank ML Internship Capstone</h3>
+
+            <p>
+                This research presents observed patterns and validated ranking
+                results from the selected dataset and evaluation design. It is
+                intended as decision-support for prioritizing human content review
+                and should not be interpreted as causal evidence or a guarantee of
+                intervention outcomes.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+</body>
+
+</html>
